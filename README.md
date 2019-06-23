@@ -7,7 +7,7 @@ Konami Firebeat is a notoriously flaky stack that runs several older rhythm game
 
 ## Executable Format
 
-The first four bytes of the executable should be interpreted as a little endian unsigned integer. This is the size of the executable once it has been decompressed in main RAM. The rest of the file is a LZ77-compressed binary. If extracted correctly, its length should exactly equal the size specified in the first four bytes. The name of the executable is as dictated below:
+The first four bytes of the executable should be interpreted as a little endian unsigned integer. This is the size of the executable once it has been decompressed in main RAM. The rest of the file is a LZ77-compressed PowerPC binary. If extracted correctly, its length should exactly equal the size specified in the first four bytes. The last four bytes of the decompressed executable is the entrypoint. It should be a branch instruction (`0x4BF0xxxx`) causing the BIOS to jump to the actual start of the binary. In practice, the four preceding bytes are a second entrypoint but seems to always jump to the same address. The name of the executable is as dictated below:
 
  * Beatmania III - `HIKARU.EXE`
  * KeyboardMania - `FIREBEAT.EXE`
