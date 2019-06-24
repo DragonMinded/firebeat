@@ -62,8 +62,12 @@ class LZSSDecompressor:
                 yield data
             elif flag == self.FLAG_BACKREF:
                 # Backref into window buffer setup
-                high = self.data[self.consumed]
-                low = self.data[self.consumed + 1]
+                try:
+                    high = self.data[self.consumed]
+                    low = self.data[self.consumed + 1]
+                except IndexError:
+                    # We're done reading, nothing else to do
+                    return
 
                 if (
                     low == 0 and high == 0 and
