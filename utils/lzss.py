@@ -64,6 +64,11 @@ class LZSSDecompressor:
                 # Backref into window buffer setup
                 high = self.data[self.consumed]
                 low = self.data[self.consumed + 1]
+
+                if low == 0 and high == 0:
+                    # We have nothing to copy, which means we're done.
+                    return
+
                 self.read_len = (low & 0xF) + 3
                 self.read_pos = high | ((low << 4) & 0xF00)
 
