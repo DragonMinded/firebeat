@@ -19,3 +19,9 @@ You can use MAME to decompress images if you are in a pinch and do not have work
 ## Working with Disk Images
 
 Images can be ripped and burned again using your favorite image reading/writing software. However, to modify an image (such as to replace the EXE with a new one), you should use UltraISO. I have had success modifying images ripped using ImgBurn, using UltraISO to replace the EXE and then burning the updated image with ImgBurn. Your results may vary, but IIRC the sector size for Firebeat images is nonstandard so you need a program that respects that when updating images. You can test that you've created a working updated image using MAME. If you start MAME with the `-debug` flag, you can choose an ISO to use in place of any disk. An example MAME command line to test Beatmania III The Final modifications is `mame64 -window -debug bm3final`
+
+## Utilities
+
+Inside the `utils` directory you will find Python3 code that performs a variety of actions. The target version of Python3 I used was 3.6, but any version newer than this will work as well. The code is organized in a way that will hopefully promote reuse in other areas where it may be useful.
+
+ * `exe_utils` - Utilities for packing and unpacking Firebeat EXE files. Run with `--help` to see full options. Can take a `HIKARU.EXE` or `FIREBEAT.EXE` and unpack it to its raw PPC form, as described in the executable format above. This is suitable for decompiling or applying hex edits to change behavior or text. Can also take a raw PPC binary and repack it to a Firebeat EXE file that is accepted on real hardware. Use this to repack binaries that you have edited.
