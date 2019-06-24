@@ -65,7 +65,10 @@ class LZSSDecompressor:
                 high = self.data[self.consumed]
                 low = self.data[self.consumed + 1]
 
-                if low == 0 and high == 0:
+                if (
+                    low == 0 and high == 0 and
+                    (self.consumed + 2) == len(self.data)
+                ):
                     # We have nothing to copy, which means we're done.
                     return
 
@@ -95,6 +98,8 @@ class LZSSFakeCompressor:
         self.consumed: int = 0
 
     def __get_bytes(self) -> Generator[bytes, None, None]:
+        partial_output = False
+
         while True:
             # First, output a flag byte
             left = len(self.data) - self.consumed
@@ -104,23 +109,39 @@ class LZSSFakeCompressor:
             if left == 0:
                 # There's nothing left to consume, return an
                 # empty flag byte and stop iterating.
-                yield b'\x00'
+                if partial_output:
+                    # We need to output a dummy lookback that's
+                    # empty, since we advertised having a lookback.
+                    yield b'\x00\x00'
+                else:
+                    # We had exactly 8 bytes last time, so output a new
+                    # flag byte followed by a dummy lookback.
+                    yield b'\x00\x00\x00'
+                # No more iterating
                 return
             elif left == 1:
+                partial_output = True
                 yield b'\x01'
             elif left == 2:
+                partial_output = True
                 yield b'\x03'
             elif left == 3:
+                partial_output = True
                 yield b'\x07'
             elif left == 4:
+                partial_output = True
                 yield b'\x0F'
             elif left == 5:
+                partial_output = True
                 yield b'\x1F'
             elif left == 6:
+                partial_output = True
                 yield b'\x3F'
             elif left == 7:
+                partial_output = True
                 yield b'\x7F'
             elif left == 8:
+                partial_output = False
                 yield b'\xFF'
 
             # Now, output the amount of bytes we need to cheese
