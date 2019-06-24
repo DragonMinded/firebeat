@@ -1,0 +1,81 @@
+#! /usr/bin/env python3
+import argparse
+import sys
+
+from firebeat import FirebeatExe
+
+
+def main() -> int:
+    # Create the argument parser
+    parser = argparse.ArgumentParser(
+        description="Utilities for working with a Firebeat EXE file.",
+    )
+    subparsers = parser.add_subparsers(help='commands', dest='command')
+
+    # Parser for executable unpacking
+    unpack_parser = subparsers.add_parser('unpack', help='Unpack a Firebeat EXE to a raw PPC binary file.')
+    unpack_parser.add_argument(
+        'exe',
+        metavar='EXE',
+        type=str,
+        help='The EXE file (FIREBEAT.EXE or HIKARU.EXE) that we should unpack.',
+    )
+    unpack_parser.add_argument(
+        'bin',
+        metavar='BIN',
+        type=str,
+        help='The raw binary file we should write the unpacked PPC binary to.',
+    )
+
+    # Parser for executable packing
+    pack_parser = subparsers.add_parser('pack', help='Pack a raw PPC binary file into a Firebeat EXE.')
+    pack_parser.add_argument(
+        'bin',
+        metavar='BIN',
+        type=str,
+        help='The raw binary file we should pack into a Firebeat EXE.',
+    )
+    pack_parser.add_argument(
+        'exe',
+        metavar='EXE',
+        type=str,
+        help='The EXE file (FIREBEAT.EXE or HIKARU.EXE) that we should pack the binary into.',
+    )
+
+    # Grab what we're doing
+    args = parser.parse_args()
+
+    if args.command == 'pack':
+        binfile = args.bin
+        exefile = args.exe
+
+        with open(binfile, "rb") as fp:
+            data = fp.read()
+
+        packed = FirebeatExe.raw_to_exe(data)
+
+        with open(exefile, "wb") as fp:
+            fp.write(packed)
+
+        print(f"Packed {binfile} and wrote to {exefile}.")
+    elif args.command == 'unpack':
+        binfile = args.bin
+        exefile = args.exe
+
+        with open(exefile, "rb") as fp:
+            data = fp.read()
+
+        unpacked = FirebeatExe.exe_to_raw(data)
+
+        with open(binfile, "wb") as fp:
+            fp.write(unpacked)
+
+        print(f"Unpacked {exefile} and wrote to {binfile}.")
+    else:
+        raise Exception(f"Unknown command {args.command}")
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
