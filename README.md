@@ -3,7 +3,12 @@ This repo serves as a centralized location for me to document and upload utiliti
 
 ## System Info
 
-Konami Firebeat is a notoriously flaky stack that runs several older rhythm games. For information on the hardware itself, please see [gamerepair.info](https://gamerepair.info/hardware/5_firebeat). Every single firebeat version boots from an onboard BIOS and then transfers control to an executable found on the primary CD. As far as I know, the format of the executable is always the same, although the name of the executable changes depending on the game you are booting.
+Konami Firebeat is a notoriously flaky stack that runs several older rhythm games. For information on the hardware itself, please see [gamerepair.info](https://gamerepair.info/hardware/5_firebeat). Every single firebeat version boots from an onboard BIOS and then transfers control to an executable found on the primary CD. The program code both in BIOS and on disk is PowerPC and is executed by the 403GCX chip. The name of the executable is as dictated below:
+
+ * Beatmania III - `HIKARU.EXE`
+ * KeyboardMania - `FIREBEAT.EXE` or `HIKARU.EXE` depending on the mix.
+ * Pop'n Music - `FIREBEAT.EXE`
+ * ParaParaParadise - `HIKARU.EXE`
 
 ## Executable Format
 
@@ -13,12 +18,7 @@ The EXE fomat for PPP is a bit more complex than for the other three game series
 
 ### All Others
 
-The first four bytes of the executable should be interpreted as a little endian unsigned integer. This is the size of the executable once it has been decompressed in main RAM. The rest of the file is a LZSS-compressed PowerPC binary. If extracted correctly, its length should exactly equal the size specified in the first four bytes. The last four bytes of the decompressed executable is the entrypoint. It should be a branch instruction (`0x4BF0xxxx`) causing the BIOS to jump to the actual start of the binary. In practice, the four preceding bytes are a second entrypoint but seems to always jump to the same address. The name of the executable is as dictated below:
-
- * Beatmania III - `HIKARU.EXE`
- * KeyboardMania - `FIREBEAT.EXE` or `HIKARU.EXE` depending on the mix.
- * Pop'n Music - `FIREBEAT.EXE`
- * ParaParaParadise - `HIKARU.EXE`
+The first four bytes of the executable should be interpreted as a little endian unsigned integer. This is the size of the executable once it has been decompressed in main RAM. The rest of the file is a LZSS-compressed PowerPC binary. If extracted correctly, its length should exactly equal the size specified in the first four bytes. The last four bytes of the decompressed executable is the entrypoint. It should be a branch instruction (`0x4BF0xxxx`) causing the BIOS to jump to the actual start of the binary. In practice, the four preceding bytes are a second entrypoint but seems to always jump to the same address.
 
 You can use MAME to decompress images if you are in a pinch and do not have working LZSS tools. Boot the game image that you wish to decompress the executable from in debug mode, wait until it boots past the BIOS and starts running through game-specific hardware checks, and then dump the main RAM starting at address `0x0` and ending at the size specified in the first four bytes of the EXE as found on disk. An example MAME debugger command to dump Beatmania III The Final's uncompressed executable is `save hikaru.bin, 0x0, 0x100000`. This raw image can be made back into an EXE again by first dummy compressing (insert an `0xFF` byte before every 8 byte chunk in the raw image) and then re-appending the executable size. If replaced on disk, both MAME and real hardware will happily boot this executable.
 
