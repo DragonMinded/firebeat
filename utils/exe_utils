@@ -26,6 +26,11 @@ def main() -> int:
         type=str,
         help='The raw binary file we should write the unpacked PPC binary to.',
     )
+    unpack_parser.add_argument(
+        '--ppp',
+        action='store_true',
+        help='The EXE file we are unpacking is from the ParaParaParadise series.',
+    )
 
     # Parser for executable packing
     pack_parser = subparsers.add_parser('pack', help='Pack a raw PPC binary file into a Firebeat EXE.')
@@ -41,6 +46,11 @@ def main() -> int:
         type=str,
         help='The EXE file (FIREBEAT.EXE or HIKARU.EXE) that we should pack the binary into.',
     )
+    pack_parser.add_argument(
+        '--ppp',
+        action='store_true',
+        help='The raw binary file we are packing is from the ParaParaParadise series.',
+    )
 
     # Grab what we're doing
     args = parser.parse_args()
@@ -52,7 +62,7 @@ def main() -> int:
         with open(binfile, "rb") as fp:
             data = fp.read()
 
-        packed = FirebeatExe.raw_to_exe(data)
+        packed = FirebeatExe.raw_to_exe(data, is_ppp=args.ppp)
 
         with open(exefile, "wb") as fp:
             fp.write(packed)
@@ -65,7 +75,7 @@ def main() -> int:
         with open(exefile, "rb") as fp:
             data = fp.read()
 
-        unpacked = FirebeatExe.exe_to_raw(data)
+        unpacked = FirebeatExe.exe_to_raw(data, is_ppp=args.ppp)
 
         with open(binfile, "wb") as fp:
             fp.write(unpacked)
