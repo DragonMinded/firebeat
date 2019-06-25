@@ -43,3 +43,48 @@ The following are patch offsets that you can apply to a raw PowerPC image that h
  * 8E6C: 48 09 3F 6D -> 38 60 00 00
  * 8EE8: 48 09 40 ED -> 38 60 00 00
  * 9480: 48 09 3C D9 -> 38 60 00 00
+
+### Beatmania III The Final
+
+#### Skip Dongle Check
+
+ * 4490: 48 09 00 3D -> 38 60 00 00
+ * 44FC: 48 09 01 CD -> 38 60 00 00
+ * 4A70: 48 08 FD DD -> 38 60 00 00
+
+#### Skip FDD Init
+
+If you have one of the many Beatmania III Firebeats where the floppy controller has gone bad, you can use this to skip initializing the floppy. This disables all floppy functionality.
+
+ * 47F8: 48 0C EF 91 -> 38 60 00 00
+ * 3FAF4: 4B FF FD 59 -> 38 60 00 00
+ * 3FB54: 4B FF FC F9 -> 38 60 00 00
+
+### Keyboard Mania
+
+#### Skip Dongle Check
+
+ * 2C530: 7F C3 F3 78 -> 38 60 00 00
+
+### Keyboard Mania 2ndMIX
+
+#### Skip Dongle Check
+
+ * 51D53: 01 -> 00
+ * 51DC3: 02 -> 00
+ * 51E17: 03 -> 00
+ * 51E4B: 04 -> 00
+
+#### Skip E940 Error
+
+If you have used a donor board from a Pop'n Music or Beatmania III to do a mainboard repair for Keyboard Mania, sometimes it can throw an E940 error after passing all hardware checks. This seems to be an error verifying that the software is running on the right type of Firebeat. This skips this check and allows you to transplant parts between Firebeat boards to make a Keyboard Mania main board.
+
+ * 5A44: 41 82 -> 48 00
+
+### Keyboard Mania 3rdMIX
+
+#### Skip E940 Error
+
+If you have used a donor board from a Pop'n Music or Beatmania III to do a mainboard repair for Keyboard Mania, sometimes it can throw an E940 error after passing all hardware checks. This seems to be an error verifying that the software is running on the right type of Firebeat. This skips this check and allows you to transplant parts between Firebeat boards to make a Keyboard Mania main board.
+
+ * 4F40: 41 82 -> 48 00
