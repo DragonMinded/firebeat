@@ -88,3 +88,61 @@ If you have used a donor board from a Pop'n Music or Beatmania III to do a mainb
 If you have used a donor board from a Pop'n Music or Beatmania III to do a mainboard repair for Keyboard Mania, sometimes it can throw an E940 error after passing all hardware checks. This seems to be an error verifying that the software is running on the right type of Firebeat. This skips this check and allows you to transplant parts between Firebeat boards to make a Keyboard Mania main board.
 
  * 4F40: 41 82 -> 48 00
+
+### Pop'n Music 4
+
+#### Skip Dongle Check
+
+ * B8EC: 48 00 E8 E1 -> 38 60 00 00
+ * B914: 48 00 E7 4D -> 38 60 00 00
+ * B924: 48 00 E1 C9 -> 38 60 00 00
+
+### Pop'n Music 5
+
+#### Skip Dongle Check
+
+ * CCFC: 48 01 43 F9 -> 38 60 00 00
+ * EFD8: 48 01 21 1D -> 38 60 00 00
+
+### Pop'n Music 6
+
+#### Skip Dongle Check
+
+ * 509B6: FF FF -> 00 00
+ * 56498: 48 03 4A 4D -> 38 60 00 00
+ * 56520: 48 03 42 E5 -> 38 60 00 00
+ * 78A84: 48 01 24 61 -> 38 60 00 00
+ * 78ABC: 48 01 1D 49 -> 38 60 00 00
+ * 78BD8: 41 82 -> 48 00
+ * 8AF4A: FF FF -> 00 00
+
+### Pop'n Music 7
+
+#### Skip Dongle Check
+
+ * 5BEB0: 48 04 20 2D -> 38 60 00 00
+ * 5BF54: 48 04 3B 21 -> 38 60 00 00
+ * 858E0: 48 01 85 FD -> 38 60 00 00
+ * 859FC: 41 82 -> 48 00
+ * 8E622: FF FF -> 00 00
+
+### Pop'n Music Mickey Tunes
+
+#### Skip Dongle Check
+
+ * B924: 48 01 26 01 -> 38 60 00 00
+ * CD7C: 3D 60 80 10 -> 39 60 00 00
+ * CD80: 81 6B 02 94 -> 39 60 00 00
+ * DB10: 48 01 04 15 -> 38 60 00 00
+ * 1D0FE: FF FF -> 00 00
+ * 1E66A: FF Ff -> 00 00
+
+### Pop'n Music Mickey Tunes Update Disk
+
+#### Skip Dongle Check
+
+ * 30524: 48 01 D0 09 -> 38 60 00 00
+ * 31E0C: 3D 60 80 15 81 6B 6A 4C -> 39 60 00 00 39 60 00 00
+ * 32BB0: 48 01 A9 7D -> 38 60 00 00
+ * 43A76: FF FF -> 00 00
+ * 4DC72: FF FF -> 00 00
