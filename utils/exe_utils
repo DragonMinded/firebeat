@@ -62,7 +62,11 @@ def main() -> int:
         with open(binfile, "rb") as fp:
             data = fp.read()
 
-        packed = FirebeatExe.raw_to_exe(data, is_ppp=args.ppp)
+        try:
+            packed = FirebeatExe.raw_to_exe(data, is_ppp=args.ppp)
+        except Exception:
+            print(f"Failed to pack {binfile}.")
+            return 1
 
         with open(exefile, "wb") as fp:
             fp.write(packed)
@@ -75,7 +79,11 @@ def main() -> int:
         with open(exefile, "rb") as fp:
             data = fp.read()
 
-        unpacked = FirebeatExe.exe_to_raw(data, is_ppp=args.ppp)
+        try:
+            unpacked = FirebeatExe.exe_to_raw(data, is_ppp=args.ppp)
+        except Exception:
+            print(f"Failed to unpack {exefile}.")
+            return 1
 
         with open(binfile, "wb") as fp:
             fp.write(unpacked)
