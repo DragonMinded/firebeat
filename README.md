@@ -31,3 +31,15 @@ Images can be ripped and burned again using your favorite image reading/writing 
 Inside the `utils` directory you will find Python3 code that performs a variety of actions. The target version of Python3 I used was 3.6, but any version newer than this will work as well. The code is organized in a way that will hopefully promote reuse in other areas where it may be useful.
 
  * `exe_utils` - Utilities for packing and unpacking Firebeat EXE files. Run with `--help` to see full options. Can take a `HIKARU.EXE` or `FIREBEAT.EXE` and unpack it to its raw PPC form, as described in the executable format above. This is suitable for decompiling or applying hex edits to change behavior or text. Can also take a raw PPC binary and repack it to a Firebeat EXE file that is accepted on real hardware. Use this to repack binaries that you have edited. Note that PPP binaries are more complex, so when working with them be sure to use the `--ppp` flag.
+
+## Patch Offsets
+
+The following are patch offsets that you can apply to a raw PowerPC image that has been extracted. The number on the left of the colon is the hex offset where you should make the change, and the numbers on the right of the colon are the before and after values at that location. To use any of these, obtain an image of the game, copy the Firebeat EXE out of the image, decompress it using the `exe_utils unpack` command, apply the edits using your favorite hex editor, recompress the image using `exe_utils pack` and then replace the Firebeat EXE in the image you obtained the original from.
+
+### Beatmania III Append 7thMIX
+
+#### Skip Dongle Check
+
+ * 8E6C: 48 09 3F 6D -> 38 60 00 00
+ * 8EE8: 48 09 40 ED -> 38 60 00 00
+ * 9480: 48 09 3C D9 -> 38 60 00 00
