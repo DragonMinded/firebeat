@@ -28,11 +28,17 @@ Images can be ripped and burned again using your favorite image reading/writing 
 
 ## Utilities
 
-Inside the `utils` directory you will find Python3 code that performs a variety of actions. The target version of Python3 I used was 3.6, but any version newer than this will work as well. The code is organized in a way that will hopefully promote reuse in other areas where it may be useful.
+Inside the `utils` directory you will find Python3 code that performs a variety of actions. The target version of Python3 I used was 3.6, but any version newer than this will work as well. The code is organized in a way that will hopefully promote reuse in other areas where it may be useful. On unix-like systems where Python3.6 or greater is installed, you can run these directly. On Windows, run them from the command line that has Python3.6 on the path by prefixing "python3" to the command.
 
- * `exe_utils` - Utilities for working with Firebeat EXE files. Run with `--help` to see full options. Can take a `HIKARU.EXE` or `FIREBEAT.EXE` and unpack it to its raw PPC form, as described in the executable format above. This is suitable for decompiling or applying hex edits to change behavior or text. Can also take a raw PPC binary and repack it to a Firebeat EXE file that is accepted on real hardware. Use this to repack binaries that you have edited. Note that PPP binaries are more complex, so when working with them be sure to use the `--ppp` flag. Can also take two Firebeat EXE files and output the diff of their PPC code as a list of patch offsets. Can also take a Firebeat EXE file and a list of patch offsets and apply the patches to the EXE file.
+ * `exe_utils` - Utilities for working with Firebeat EXE files. Run with `--help` to see full options. Note that PPP binaries are more complex, so when working with them be sure to use the `--ppp` flag.
+   * `exe_utils unpack` - Can take a `HIKARU.EXE` or `FIREBEAT.EXE` and unpack it to its raw PPC form, as described in the executable format above. This is suitable for decompiling or applying hex edits to change behavior or text.
+   * `exe_utils pack` - Can take a raw PPC binary and repack it to a Firebeat EXE file that is accepted on real hardware. Use this to repack binaries that you have edited.
+   * `exe_utils diff` - Can take two Firebeat EXE files and output the diff of their PPC code as a list of patch offsets. Use this to generate patch lists like you see below.
+   * `exe_utils patch` - Can take a Firebeat EXE file and a list of patch offsets and apply the patches to the EXE file. Use these to apply patch offsets found below to a Firebeat EXE.
 
- * `bin_utils` - Utilities for working with raw PPC binaries that have been extracted. Run with `--help` to see full options. Can take two binaries and output the diff between them as a list of patch offsets. Can also take a binary and a list of patch offsets and apply the patches to the binary file.
+ * `bin_utils` - Utilities for working with raw PPC binaries that have been extracted. Run with `--help` to see full options.
+   * `bin_utils diff` - Can take two binaries and output the diff between them as a list of patch offsets.
+   * `bin_utils patch` - Can take a binary and a list of patch offsets and apply the patches to the binary file.
 
 ## Patch Offsets
 
