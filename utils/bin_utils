@@ -34,6 +34,32 @@ def main() -> int:
         help='Write patches to a file instead of stdout.',
     )
 
+    # Parser for patching a binary file
+    patch_parser = subparsers.add_parser('patch', help='Patch a binary file.')
+    patch_parser.add_argument(
+        'bin',
+        metavar='BIN',
+        type=str,
+        help='The binary file we should patch.',
+    )
+    patch_parser.add_argument(
+        'out',
+        metavar='OUT',
+        type=str,
+        help='The file we should write the patched binary to.',
+    )
+    patch_parser.add_argument(
+        '--patch-file',
+        metavar='FILE',
+        type=str,
+        help='Read patches from a file instead of stdin.',
+    )
+    patch_parser.add_argument(
+        '--reverse',
+        action="store_true",
+        help='Perform the patch in reverse.',
+    )
+
     # Grab what we're doing
     args = parser.parse_args()
 
@@ -55,6 +81,27 @@ def main() -> int:
         else:
             with open(args.patch_file, "w") as fp:
                 fp.write(os.linesep.join(differences))
+    elif args.command == 'patch':
+        with open(args.bin, "rb") as fp:
+            old = fp.read()
+
+        if not args.patch_file:
+            differences = sys.stdin.readlines()
+        else:
+            with open(args.patch_file, "r") as fp:
+                differences = fp.readlines()
+        differences = [d.strip() for d in differences if d.strip()]
+
+        try:
+            new = Binary.patch(old, differences, reverse=args.reverse)
+        except Exception as e:
+            print(f"Could not patch {args.bin}: {str(e)}", file=sys.stderr)
+            return 1
+
+        with open(args.out, "wb") as fp:
+            fp.write(new)
+
+        print(f"Patched {args.bin} and wrote to {args.out}.")
     else:
         print("Please specify a valid command!", file=sys.stderr)
         return 1

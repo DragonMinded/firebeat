@@ -71,7 +71,7 @@ def main() -> int:
     diff_parser.add_argument(
         '--ppp',
         action='store_true',
-        help='The raw binary file we are packing is from the ParaParaParadise series.',
+        help='The EXE files we are diffing are from the ParaParaParadise series.',
     )
     diff_parser.add_argument(
         '--patch-file',
@@ -80,6 +80,36 @@ def main() -> int:
         help='Write patches to a file instead of stdout.',
     )
 
+    # Parser for patching a binary file
+    patch_parser = subparsers.add_parser('patch', help='Patch the contents of a Firebeat EXE file.')
+    patch_parser.add_argument(
+        'exe',
+        metavar='EXE',
+        type=str,
+        help='The EXE file whose contents we should unpack and patch.',
+    )
+    patch_parser.add_argument(
+        'out',
+        metavar='OUT',
+        type=str,
+        help='The Firebeat EXE file we should write the patched and repacked binary to.',
+    )
+    patch_parser.add_argument(
+        '--ppp',
+        action='store_true',
+        help='The EXE file we are patching is from the ParaParaParadise series.',
+    )
+    patch_parser.add_argument(
+        '--patch-file',
+        metavar='FILE',
+        type=str,
+        help='Read patches from a file instead of stdin.',
+    )
+    patch_parser.add_argument(
+        '--reverse',
+        action="store_true",
+        help='Perform the patch in reverse.',
+    )
 
     # Grab what we're doing
     args = parser.parse_args()
@@ -132,7 +162,29 @@ def main() -> int:
         else:
             with open(args.patch_file, "w") as fp:
                 fp.write(os.linesep.join(differences))
+    elif args.command == 'patch':
+        with open(args.exe, "rb") as fp:
+            old = fp.read()
 
+        if not args.patch_file:
+            differences = sys.stdin.readlines()
+        else:
+            with open(args.patch_file, "r") as fp:
+                differences = fp.readlines()
+        differences = [d.strip() for d in differences if d.strip()]
+
+        try:
+            old = FirebeatExe.exe_to_raw(old, is_ppp=args.ppp)
+            new = Binary.patch(old, differences, reverse=args.reverse)
+            new = FirebeatExe.raw_to_exe(new, is_ppp=args.ppp)
+        except Exception as e:
+            print(f"Could not patch {args.exe}: {str(e)}", file=sys.stderr)
+            return 1
+
+        with open(args.out, "wb") as fp:
+            fp.write(new)
+
+        print(f"Patched {args.exe} and wrote to {args.out}.")
     else:
         print("Please specify a valid command!", file=sys.stderr)
         return 1
