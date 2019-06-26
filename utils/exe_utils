@@ -2,6 +2,7 @@
 import argparse
 import sys
 
+from binary import Binary
 from firebeat import FirebeatExe
 
 
@@ -52,43 +53,73 @@ def main() -> int:
         help='The raw binary file we are packing is from the ParaParaParadise series.',
     )
 
+    # Parser for diffing two binary files
+    diff_parser = subparsers.add_parser('diff', help='Diff contents of two Firebeat EXE files.')
+    diff_parser.add_argument(
+        'file1',
+        metavar='FILE1',
+        type=str,
+        help='The base Firebeat EXE file that we will unpack and output diffs relative to.',
+    )
+    diff_parser.add_argument(
+        'file2',
+        metavar='FILE2',
+        type=str,
+        help='The Firebeta EXE file that we will unpack and compare against the base file to find diffs.',
+    )
+    diff_parser.add_argument(
+        '--ppp',
+        action='store_true',
+        help='The raw binary file we are packing is from the ParaParaParadise series.',
+    )
+
     # Grab what we're doing
     args = parser.parse_args()
 
     if args.command == 'pack':
-        binfile = args.bin
-        exefile = args.exe
-
-        with open(binfile, "rb") as fp:
+        with open(args.bin, "rb") as fp:
             data = fp.read()
 
         try:
             packed = FirebeatExe.raw_to_exe(data, is_ppp=args.ppp)
         except Exception as e:
-            print(f"Failed to pack {binfile}: {str(e)}", file=sys.stderr)
+            print(f"Failed to pack {args.bin}: {str(e)}", file=sys.stderr)
             return 1
 
-        with open(exefile, "wb") as fp:
+        with open(args.exe, "wb") as fp:
             fp.write(packed)
 
-        print(f"Packed {binfile} and wrote to {exefile}.")
+        print(f"Packed {args.bin} and wrote to {args.exe}.")
     elif args.command == 'unpack':
-        binfile = args.bin
-        exefile = args.exe
-
-        with open(exefile, "rb") as fp:
+        with open(args.exe, "rb") as fp:
             data = fp.read()
 
         try:
             unpacked = FirebeatExe.exe_to_raw(data, is_ppp=args.ppp)
         except Exception as e:
-            print(f"Failed to unpack {exefile}: {str(e)}", file=sys.stderr)
+            print(f"Failed to unpack {args.exe}: {str(e)}", file=sys.stderr)
             return 1
 
-        with open(binfile, "wb") as fp:
+        with open(args.bin, "wb") as fp:
             fp.write(unpacked)
 
-        print(f"Unpacked {exefile} and wrote to {binfile}.")
+        print(f"Unpacked {args.exe} and wrote to {args.bin}.")
+    elif args.command == 'diff':
+        with open(args.file1, "rb") as fp:
+            file1 = fp.read()
+        with open(args.file2, "rb") as fp:
+            file2 = fp.read()
+
+        try:
+            file1 = FirebeatExe.exe_to_raw(file1, is_ppp=args.ppp)
+            file2 = FirebeatExe.exe_to_raw(file2, is_ppp=args.ppp)
+            differences = Binary.diff(file1, file2)
+        except Exception as e:
+            print(f"Could not diff {args.file1} against {args.file2}: {str(e)}", file=sys.stderr)
+            return 1
+
+        for line in differences:
+            print(line)
     else:
         print("Please specify a valid command!", file=sys.stderr)
         return 1
