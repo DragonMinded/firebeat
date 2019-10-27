@@ -1,21 +1,41 @@
 from typing import List, Tuple
 
 
+class BinaryException(Exception):
+    pass
+
+
 class Binary:
+
+    CHUNK_SIZE = 1024
+
+    @staticmethod
+    def _hex(val: int) -> str:
+        out = hex(val)[2:]
+        out = out.upper()
+        if len(out) == 1:
+            out = "0" + out
+        return out
 
     @staticmethod
     def diff(bin1: bytes, bin2: bytes) -> List[str]:
-        if len(bin1) != len(bin2):
-            raise Exception("Cannot diff different-sized binary blobs!")
+        binlength = len(bin1)
+        if binlength != len(bin2):
+            raise BinaryException("Cannot diff different-sized binary blobs!")
 
         # First, get the list of differences
         differences: List[Tuple[int, bytes, bytes]] = []
-        for i in range(len(bin1)):
-            byte1 = bin1[i:(i+1)]
-            byte2 = bin2[i:(i+1)]
 
-            if byte1 != byte2:
-                differences.append((i, byte1, byte2))
+        # Chunk the differences, assuming files are usually about the same,
+        # for a massive speed boost.
+        for offset in range(0, binlength, Binary.CHUNK_SIZE):
+            if bin1[offset:(offset + Binary.CHUNK_SIZE)] != bin2[offset:(offset + Binary.CHUNK_SIZE)]:
+                for i in range(Binary.CHUNK_SIZE):
+                    byte1 = bin1[offset + i]
+                    byte2 = bin2[offset + i]
+
+                    if byte1 != byte2:
+                        differences.append((offset + i, bytes([byte1]), bytes([byte2])))
 
         # Don't bother with any combination crap if we have nothing to do
         if not differences:
@@ -25,21 +45,14 @@ class Binary:
         cur_block: Tuple[int, bytes, bytes] = differences[0]
         ret: List[str] = []
 
-        def _hex(val: int) -> str:
-            out = hex(val)[2:]
-            out = out.upper()
-            if len(out) == 1:
-                out = "0" + out
-            return out
-
         def _hexrun(val: bytes) -> str:
-            return " ".join(_hex(v) for v in val)
+            return " ".join(Binary._hex(v) for v in val)
 
         def _output(val: Tuple[int, bytes, bytes]) -> None:
             start = val[0] - len(val[1]) + 1
 
             ret.append(
-                f"{_hex(start)}: {_hexrun(val[1])} -> {_hexrun(val[2])}"
+                f"{Binary._hex(start)}: {_hexrun(val[1])} -> {_hexrun(val[2])}"
             )
 
         def _combine(val: Tuple[int, bytes, bytes]) -> None:
@@ -68,12 +81,7 @@ class Binary:
         return ret
 
     @staticmethod
-    def patch(
-        binary: bytes,
-        patches: List[str],
-        *,
-        reverse: bool = False,
-    ) -> bytes:
+    def _gather_differences(patches: List[str], reverse: bool) -> List[Tuple[int, bytes, bytes]]:
         # First, separate out into a list of offsets and old/new bytes
         differences: List[Tuple[int, bytes, bytes]] = []
 
@@ -88,12 +96,12 @@ class Binary:
             ]
 
             if len(beforevals) != len(aftervals):
-                raise Exception(
+                raise BinaryException(
                     f"Patch before and after length mismatch at "
                     f"offset {start_offset}!"
                 )
             if len(beforevals) == 0:
-                raise Exception(
+                raise BinaryException(
                     f"Must have at least one byte to change at "
                     "offset {start_offset}!"
                 )
@@ -106,8 +114,8 @@ class Binary:
                 differences.append(
                     (
                         offset + i,
-                        beforebytes[i:i+1],
-                        afterbytes[i:i+1],
+                        beforebytes[i:(i + 1)],
+                        afterbytes[i:(i + 1)],
                     )
                 )
 
@@ -115,29 +123,44 @@ class Binary:
         if reverse:
             differences = [(x[0], x[2], x[1]) for x in differences]
 
-        def _hex(val: int) -> str:
-            out = hex(val)[2:]
-            out = out.upper()
-            if len(out) == 1:
-                out = "0" + out
-            return out
+        # Finally, return it
+        return differences
+
+    @staticmethod
+    def patch(
+        binary: bytes,
+        patches: List[str],
+        *,
+        reverse: bool = False,
+    ) -> bytes:
+        # First, grab the differences
+        differences: List[Tuple[int, bytes, bytes]] = sorted(
+            Binary._gather_differences(patches, reverse),
+            key=lambda diff: diff[0],
+        )
+        chunks: List[bytes] = []
+        last_patch_end: int = 0
 
         # Now, apply the changes to the binary data
         for diff in differences:
             offset, old, new = diff
 
             if len(binary) < offset:
-                raise Exception(
-                    f"Patch offset {_hex(offset)} is beyond the end of "
+                raise BinaryException(
+                    f"Patch offset {Binary._hex(offset)} is beyond the end of "
                     f"the binary!"
                 )
-            if binary[offset:(offset+1)] != old:
-                raise Exception(
-                    f"Patch offset {_hex(offset)} expecting {_hex(old[0])} "
-                    f"but found {_hex(binary[offset])}!"
+            if old != b'*' and binary[offset:(offset + 1)] != old:
+                raise BinaryException(
+                    f"Patch offset {Binary._hex(offset)} expecting {Binary._hex(old[0])} "
+                    f"but found {Binary._hex(binary[offset])}!"
                 )
 
-            binary = binary[:offset] + new + binary[(offset + 1):]
+            if last_patch_end < offset:
+                chunks.append(binary[last_patch_end:offset])
+            chunks.append(new)
+            last_patch_end = offset + 1
 
         # Return the new data!
-        return binary
+        chunks.append(binary[last_patch_end:])
+        return b"".join(chunks)
