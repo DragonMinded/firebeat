@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Optional, Tuple, cast
 
 
 class BinaryException(Exception):
@@ -45,6 +45,9 @@ class Binary:
         cur_block: Tuple[int, bytes, bytes] = differences[0]
         ret: List[str] = []
 
+        # Now, include the original byte size for later comparison/checks
+        ret.append(f"# File size: {len(bin1)}")
+
         def _hexrun(val: bytes) -> str:
             return " ".join(Binary._hex(v) for v in val)
 
@@ -81,18 +84,38 @@ class Binary:
         return ret
 
     @staticmethod
-    def _gather_differences(patches: List[str], reverse: bool) -> List[Tuple[int, bytes, bytes]]:
-        # First, separate out into a list of offsets and old/new bytes
-        differences: List[Tuple[int, bytes, bytes]] = []
+    def size(patchlines: List[str]) -> Optional[int]:
+        for patch in patchlines:
+            if patch.startswith('#'):
+                # This is a comment, ignore it, unless its a file-size comment
+                patch = patch[1:].strip().lower()
+                if patch.startswith('file size:'):
+                    return int(patch[10:].strip())
+        return None
 
-        for patch in patches:
+    @staticmethod
+    def _convert(val: str) -> Optional[int]:
+        val = val.strip()
+        if val == '*':
+            return None
+        return int(val, 16)
+
+    @staticmethod
+    def _gather_differences(patchlines: List[str], reverse: bool) -> List[Tuple[int, Optional[bytes], bytes]]:
+        # First, separate out into a list of offsets and old/new bytes
+        differences: List[Tuple[int, Optional[bytes], bytes]] = []
+
+        for patch in patchlines:
+            if patch.startswith('#'):
+                # This is a comment, ignore it.
+                continue
             start_offset, patch_contents = patch.split(':', 1)
             before, after = patch_contents.split('->')
             beforevals = [
-                int(x.strip(), 16) for x in before.split(" ") if x.strip()
+                Binary._convert(x) for x in before.split(" ") if x.strip()
             ]
             aftervals = [
-                int(x.strip(), 16) for x in after.split(" ") if x.strip()
+                Binary._convert(x) for x in after.split(" ") if x.strip()
             ]
 
             if len(beforevals) != len(aftervals):
@@ -103,25 +126,35 @@ class Binary:
             if len(beforevals) == 0:
                 raise BinaryException(
                     f"Must have at least one byte to change at "
-                    "offset {start_offset}!"
+                    f"offset {start_offset}!"
                 )
 
             offset = int(start_offset.strip(), 16)
-            beforebytes = bytes(beforevals)
-            afterbytes = bytes(aftervals)
 
-            for i in range(len(beforebytes)):
+            for i in range(len(beforevals)):
+                if aftervals[i] is None:
+                    raise BinaryException(
+                        f"Cannot convert a location to a wildcard "
+                        f"at offset {start_offset}"
+                    )
+                if beforevals[i] is None and reverse:
+                    raise BinaryException(
+                        f"Patch offset {start_offset} specifies a wildcard and cannot "
+                        f"be reversed!"
+                    )
                 differences.append(
                     (
                         offset + i,
-                        beforebytes[i:(i + 1)],
-                        afterbytes[i:(i + 1)],
+                        bytes([beforevals[i] or 0]) if beforevals[i] is not None else None,
+                        bytes([aftervals[i] or 0]),
                     )
                 )
 
         # Now, if we're doing the reverse, just switch them
         if reverse:
-            differences = [(x[0], x[2], x[1]) for x in differences]
+            # We cast here because mypy can't see that we have already asserted that x[2] will never
+            # be optional in the above loop if reverse is set to True.
+            differences = [cast(Tuple[int, Optional[bytes], bytes], (x[0], x[2], x[1])) for x in differences]
 
         # Finally, return it
         return differences
@@ -129,13 +162,19 @@ class Binary:
     @staticmethod
     def patch(
         binary: bytes,
-        patches: List[str],
+        patchlines: List[str],
         *,
         reverse: bool = False,
     ) -> bytes:
         # First, grab the differences
-        differences: List[Tuple[int, bytes, bytes]] = sorted(
-            Binary._gather_differences(patches, reverse),
+        file_size = Binary.size(patchlines)
+        if file_size is not None and file_size != len(binary):
+            raise BinaryException(
+                f"Patch is for binary of size {file_size} but binary is {len(binary)} "
+                f"bytes long!"
+            )
+        differences: List[Tuple[int, Optional[bytes], bytes]] = sorted(
+            Binary._gather_differences(patchlines, reverse),
             key=lambda diff: diff[0],
         )
         chunks: List[bytes] = []
@@ -150,7 +189,7 @@ class Binary:
                     f"Patch offset {Binary._hex(offset)} is beyond the end of "
                     f"the binary!"
                 )
-            if old != b'*' and binary[offset:(offset + 1)] != old:
+            if old is not None and binary[offset:(offset + 1)] != old:
                 raise BinaryException(
                     f"Patch offset {Binary._hex(offset)} expecting {Binary._hex(old[0])} "
                     f"but found {Binary._hex(binary[offset])}!"
@@ -164,3 +203,60 @@ class Binary:
         # Return the new data!
         chunks.append(binary[last_patch_end:])
         return b"".join(chunks)
+
+    @staticmethod
+    def can_patch(
+        binary: bytes,
+        patchlines: List[str],
+        *,
+        reverse: bool = False,
+        ignore_size_differences: bool = False,
+    ) -> Tuple[bool, str]:
+        # First, grab the differences
+        if not ignore_size_differences:
+            file_size = Binary.size(patchlines)
+            if file_size is not None and file_size != len(binary):
+                return (
+                    False,
+                    f"Patch is for binary of size {file_size} but binary is {len(binary)} "
+                    f"bytes long!"
+                )
+        differences: List[Tuple[int, Optional[bytes], bytes]] = Binary._gather_differences(patchlines, reverse)
+
+        # Now, verify the changes to the binary data
+        for diff in differences:
+            offset, old, _ = diff
+
+            if len(binary) < offset:
+                return (
+                    False,
+                    f"Patch offset {Binary._hex(offset)} is beyond the end of "
+                    f"the binary!"
+                )
+            if old is not None and binary[offset:(offset + 1)] != old:
+                return (
+                    False,
+                    f"Patch offset {Binary._hex(offset)} expecting {Binary._hex(old[0])} "
+                    f"but found {Binary._hex(binary[offset])}!"
+                )
+
+        # Didn't find any problems
+        return (True, "")
+
+    @staticmethod
+    def description(patchlines: List[str]) -> Optional[str]:
+        for patch in patchlines:
+            if patch.startswith('#'):
+                # This is a comment, ignore it, unless its a description comment
+                patch = patch[1:].strip().lower()
+                if patch.startswith('description:'):
+                    return patch[12:].strip()
+        return None
+
+    @staticmethod
+    def needed_amount(patchlines: List[str]) -> int:
+        # First, grab the differences.
+        differences: List[Tuple[int, Optional[bytes], bytes]] = Binary._gather_differences(patchlines, False)
+
+        # Now, get the maximum byte we need to apply this patch.
+        return max([offset for offset, _, _ in differences]) + 1 if differences else 0
