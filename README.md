@@ -68,6 +68,12 @@ If you have one of the many Beatmania III Firebeats where the floppy controller 
  * 3FAF4: 4B FF FD 59 -> 38 60 00 00
  * 3FB54: 4B FF FC F9 -> 38 60 00 00
 
+#### Skip RTC License Screen
+
+If you are unlucky enough for your RTC batteries to run out and you are being promted for a license, use this to skip the check altogether. High scores should still save, but it will skip verifying the license on the RTC.
+
+ * 45C0: 7F DE FB 78 -> 48 00 00 0C
+
 ### Keyboard Mania
 
 #### Skip Dongle Check
