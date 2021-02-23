@@ -80,7 +80,11 @@ sub_hex_output:
 
 loc_finished:   
     # Done! We need nops to cover up original instructions, we need to
-    # cover 0xD0 bytes.
+    # cover 0xCC bytes. If we cover 0xD0 we overwrite the instruction
+    # that sets the return value to 0 on success and then the game will
+    # skip printing the dongle code. We want the check in place so if
+    # somebody doesn't insert a dongle the dumper code will still show
+    # an error.
     nop
     nop
     nop
