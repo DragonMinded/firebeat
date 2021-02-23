@@ -1,0 +1,78 @@
+# Patch to BMIII Final from MAME which can dump dongles. To use this, extract gcc01jca01.chd from MAME to bin/cue using the following command:
+# chdman extractcd --input gcc01jca01.chd --output gcc01jca01.cue --outputbin gcc01jca01.bin
+#
+# Then, mount the image and extract HIKARU.EXE. Then, patch it using the following command from the root of this repo:
+# ./utils/exe_utils patch HIKARU.EXE HIKARU-PATCHED.EXE --patch-file patches/dongledumper.patch
+#
+# Then, follow the instructions in the readme to replace the HIKARU.EXE in your CD image with HIKARU-PATCHED.EXE (being sure to rename
+# the file back to HIKARU.EXE inside the image) and then burn it and insert it into your BeatmaniaIII.
+#
+# Note that this is only capable of dumping a BeatmaniaIII Final dongle without additional modifications.
+#
+# File size: 1048576
+
+# Skip printing startup checklist.
+4184: 3C 80 80 00 -> 48 00 00 B0
+
+# Move dongle print code to make room for OK/ERROR print.
+427B: 20 -> 40
+
+# Don't print manufacture mode if the dongle is service/manufacture.
+4295: 09 04 7D -> 00 00 28
+
+# Move the OK/ERROR code for reading the dongle to below the "Dumping dongle..." text.
+4318: 55 84 20 36 -> 38 80 00 20
+432C: 55 43 20 36 -> 38 60 00 00
+
+# Don't print success/failure of IO init.
+4454: 3B E3 -> 48 00
+4457: 00 -> 38
+
+# Jump to watchdog pet loop after printing dongle, loop forever.
+44F8: 7F DE FB 78 -> 4B FF F8 1D
+
+# Change startup text to display "Dumping dongle...".
+4CB5: 47 43 43 30 31 2D 4A 43 2D 41 20 20 53 54 41 52 54 55 50 -> 44 75 6D 70 69 6E 67 20 64 6F 6E 67 6C 65 2E 2E 2E 0A 00
+
+# Get rid of superfluous "NO : " before dongle hex itself.
+4D64: 4E 4F 20 -> 25 73 00
+
+# Zero out entire dongle buffer instead of only 9 character serial no.
+944E6: 00 09 -> 01 29
+944F7: 30 -> 20
+9450E: 52 21 -> 53 41
+
+# Assembly code changes to convert dongle buffer to hex string.
+945BC: 3B E0 -> 39 41
+945BF: 00 2C 1F 00 03 40 80 00 30 7D 81 FA 14 89 8C -> 38 3D 60 80 50 39 6B 52 18 39 80 00 00 2C 0C
+945CF: 38 3D 60 80 09 39 6B 48 90 7D 6B F8 AE -> 90 40 80 00 74 88 6A 00 00 39 4A 00 01
+945DD: 0C 58 00 41 82 -> 64 26 70 48 00
+945E3: 0C -> 45
+945E5: 60 FF FF 48 00 00 A4 3B FF -> A0 00 0F 7C 64 28 38 48 00
+945EF: 01 4B FF FF D0 3B E0 -> 39 2C 0C 00 01 40 80
+945F7: 00 2C 1F -> 0C 39 8C
+945FB: 09 40 80 00 20 3D 80 80 50 39 8C 52 18 -> 01 4B FF FF D0 39 8C 00 01 38 60 00 0F
+94609: 61 FA 14 89 6B -> 84 18 38 2C 04
+9460F: 38 7D 6C F9 AE 3B FF -> 01 40 80 FF BC 38 80
+94617: 01 4B FF FF E0 3D 80 80 50 39 60 00 00 99 6C 52 21 38 61 -> 0A 98 8B 00 00 39 6B 00 01 4B FF FF AC 2C 04 00 0A 40 80
+9462B: 98 3C 80 80 09 38 84 49 04 -> 0C 38 84 00 30 48 00 00 08
+94635: A0 -> 84
+94637: 30 48 02 50 35 2C 03 -> 37 98 8B 00 00 39 6B
+9463F: 00 40 82 -> 01 4E 80
+94643: 18 3D 80 80 50 3D 60 80 50 81 6B 52 28 61 6B -> 20 60 00 00 00 60 00 00 00 60 00 00 00 60 00
+94653: 01 91 6C 52 28 3C 80 80 09 38 84 49 34 38 61 -> 00 60 00 00 00 60 00 00 00 60 00 00 00 60 00
+94663: 98 38 A0 -> 00 60 00
+94667: 30 48 02 50 05 2C 03 -> 00 60 00 00 00 60 00
+94670: 40 82 -> 60 00
+94673: 18 3D 80 80 50 3D 60 80 50 81 6B 52 28 61 6B -> 00 60 00 00 00 60 00 00 00 60 00 00 00 60 00
+94683: 01 91 6C 52 28 -> 00 60 00 00 00
+
+# Enlarge sprintf buffer in the startup printf code to make room for dongle hex.
+B61D3: C0 -> 80
+B61D7: 5C -> 9C
+B61DB: 3C -> 7C
+B61DF: 48 -> 88
+B61E7: 60 -> A0
+B61FF: 48 -> 88
+B6207: 3C -> 7C
+B620F: 40 -> 80
