@@ -1,0 +1,273 @@
+#! /usr/bin/env python3
+import argparse
+import os
+import sys
+from typing import Dict, List
+
+from binary import Binary
+from firebeat import FirebeatExe
+
+
+donglepasswords: Dict[str, Dict[str, List[bytes]]] = {
+    # BMIII (Missing CD-ROM, can't get passwords)
+    '972': {
+        'ids': [b'DEADBEEF', b'DEADBEEF', b'DEADBEEF'],
+        'passwords': [b'DEADBEEF', b'DEADBEEF', b'DEADBEEF'],
+    },
+    # BMIII Core Remix
+    'A05': {
+        'ids': [b'bm3Secu1', b'bm3Secu2', b'bm3Secu3'],
+        'passwords': [b'AndYouAn', b'dI-LADDE', b'R-talk-o'],
+    },
+    # BMIII 6th Mix
+    'A21': {
+        'ids': [b'bm3Secu1', b'bm3Secu2', b'bm3Secu3'],
+        'passwords': [b'ONE-TACT', b'KANNON-K', b'AIR-KEY!'],
+    },
+    # BMIII 7th Mix
+    'B07': {
+        'ids': [b'bm3Secu1', b'bm3Secu2', b'bm3Secu3'],
+        'passwords': [b'EQ-2-ROK', b'EQ-3-SOV', b'EQ-4-SOL'],
+    },
+    # BMIII Final
+    'C01': {
+        'ids': [b'bm3Secu1', b'bm3Secu2', b'bm3Secu3'],
+        'passwords': [b'PutIPmuP', b'JDoTysaE', b'PuCDlRoW'],
+    },
+    # Keyboard Heaven and Keyboard Mania 1stMIX
+    '974': {
+        'ids': [b'KonamiKe', b'yboardMa', b'niaGQ974'],
+        'passwords': [b'FullScal', b'eKeyboar', b'dSimulat'],
+    },
+    # Keyboard Mania 2nd Mix
+    'A01': {
+        'ids': [b'Secur001', b'Secur002', b'Secur003'],
+        'passwords': [b'm@1QlakI', b'pUre4eta', b'nkmrTYUN'],
+    },
+    # Keyboard Mania 3rd Mix
+    'A12': {
+        'ids': [b'Secur001', b'Secur002', b'Secur003'],
+        'passwords': [b'RoboHELP', b'1A400060', b'!uoykcuf'],
+    },
+    # Pop'n Music Mickey Tunes Regular and Update Revision
+    '976': {
+        'ids': [b'iDCec001', b'iDCec002', b'iDCec003'],
+        'passwords': [b'IdpAS001', b'IdpAS002', b'IdpAS003'],
+    },
+    # Pop'n Music Animelo
+    '987': {
+        'ids': [b'GQ987ID1', b'GQ987ID2', b'GQ987ID3'],
+        'passwords': [b'HisJs0sN', b'H3TfkjsU', b'Mdfiu6IH'],
+    },
+    # Pop'n Music Animelo 2
+    'A02': {
+        'ids': [b'A02ID000', b'A02ID001', b'A02ID002'],
+        'passwords': [b'A02PS000', b'A02PS001', b'A02PS002'],
+    },
+    # Pop'n Music 4
+    '986': {
+        'ids': [b'Secur001', b'Secur002', b'Secur003'],
+        'passwords': [b'thanx2re', b'versEng.', b'ths_WARN'],
+    },
+    # Pop'n Music 5
+    'A04': {
+        'ids': [b'Secur001', b'Secur002', b'Secur003'],
+        'passwords': [b'THANX2RE', b'VERSeNG.', b'THS_warn'],
+    },
+    # Pop'n Music 6
+    'A16': {
+        'ids': [b'iamlxhwe', b'fi,ahfil', b'amwhgaci'],
+        'passwords': [b'alxwhfex', b'mhaiwe,c', b'aiwx,hai'],
+    },
+    # Pop'n Music 7
+    'B00': {
+        'ids': [b'aweklcfy', b'iwaerioa', b'cnwrcawg'],
+        'passwords': [b'limsuryl', b'tvnaesir', b'utvoiaew'],
+    },
+    # Pop'n Music 8
+    'B30': {
+        'ids': [b'IZCDMNKX', b'CNIDEZOV', b'SXKDWHWT'],
+        'passwords': [b'MHQZOTAR', b'CVWZGFEP', b'SFCVYRIN'],
+    },
+    # ParaParaParadise 1.0, 1.1 and ParaParaDancing
+    '977': {
+        'ids': [b'&Natsumi', b'Yu3minaZ', b'zxZ:cZxc'],
+        'passwords': [b'Beekids#', b'Bunbun01', b'Chamber*'],
+    },
+    # ParaParaParadise 1stMIX Plus
+    'A11': {
+        'ids': [b'&hshiuwg', b'iwo;2_90', b'1YU:Ohs7'],
+        'passwords': [b'Ecuador#', b'JLKeiu30', b'J8923G21'],
+    },
+}
+
+
+# Stupid little inline data validator.
+for pw, items in donglepasswords.items():
+    if len(items['ids']) != 3:
+        raise Exception(f"Bad number of IDs for {pw}!")
+    if len(items['passwords']) != 3:
+        raise Exception(f"Bad number of IDs for {pw}!")
+    for idx in items['ids']:
+        if len(idx) != 8:
+            raise Exception(f"Bad ID length for {pw}!")
+    for idx in items['passwords']:
+        if len(idx) != 8:
+            raise Exception(f"Bad password length for {pw}!")
+
+
+def main() -> int:
+    # Create the argument parser
+    parser = argparse.ArgumentParser(
+        description="Utility to streamline dumping dongles on a Firebeat.",
+        epilog=(
+            f"Currently supports working with a modified BMIII The Final image to dump dongles on "
+            f"an actual firebeat. The following games are supported:{os.linesep}"
+            # f" - 972 - BeatmaniaIII{os.linesep}": TODO: Uncomment when we get the CD for 1st and I get passwords.
+            f" - A05 - BeatmaniaIII Core Remix{os.linesep}"
+            f" - A21 - BeatmaniaIII 6th Mix{os.linesep}"
+            f" - B07 - BeatmaniaIII 7th Mix{os.linesep}"
+            f" - C01 - BeatmaniaIII The Final{os.linesep}"
+            f" - 974 - Keyboard Mania 1stMIX and Keyboard Heaven{os.linesep}"
+            f" - A01 - Keyboard Mania 2ndMIX{os.linesep}"
+            f" - A12 - Keyboard Mania 3rdMIX{os.linesep}"
+            f" - 976 - Pop'n Music Mickey Tunes{os.linesep}"
+            f" - 987 - Pop'n Music Animelo{os.linesep}"
+            f" - A02 - Pop'n Music Animelo 2{os.linesep}"
+            f" - 986 - Pop'n Music 4{os.linesep}"
+            f" - A04 - Pop'n Music 5{os.linesep}"
+            f" - A16 - Pop'n Music 6{os.linesep}"
+            f" - B00 - Pop'n Music 7{os.linesep}"
+            f" - B30 - Pop'n Music 8{os.linesep}"
+            f" - 977 - ParaParaParadise, ParaParaParadise 1.1 and ParaParaDancing {os.linesep}"
+            f" - A11 - ParaParaParadise 1stMIX Plus{os.linesep}"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    subparsers = parser.add_subparsers(help='commands', dest='command',)
+
+    # Parser for executable checking
+    check_parser = subparsers.add_parser('check', help='Check a Firebeat exe to see if it is set up properly for dongle dumping.')
+    check_parser.add_argument(
+        'exe',
+        metavar='EXE',
+        type=str,
+        help='The EXE file (FIREBEAT.EXE or HIKARU.EXE) that we should check.',
+    )
+    check_parser.add_argument(
+        '--patch-file',
+        metavar='FILE',
+        type=str,
+        default=os.path.realpath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../patches/dongledumper.patch')),
+        help='Path to the dongledumper.patch file if it cannot be found automatically.',
+    )
+
+    # Parser for executable password updating
+    password_parser = subparsers.add_parser('password', help='Update a Firebeat exe to contain the correct passwords for dumping a dongle.')
+    password_parser.add_argument(
+        'exe',
+        metavar='EXE',
+        type=str,
+        help='The EXE file (FIREBEAT.EXE or HIKARU.EXE) that we should update the passwords for.',
+    )
+    password_parser.add_argument(
+        '--game',
+        type=str,
+        default=None,
+        choices=['C01'],
+        help='The game that we want to dump the dongle of.',
+    )
+
+    # Grab what we're doing
+    args = parser.parse_args()
+
+    if args.command == 'check':
+        with open(args.patch_file, "r") as fp:
+            differences = fp.readlines()
+        differences = [d.strip() for d in differences if d.strip()]
+
+        try:
+            with open(args.exe, "rb") as fp:
+                data = fp.read()
+
+            unpacked = FirebeatExe.exe_to_raw(data, is_ppp=False)
+        except Exception as e:
+            print(f"Failed to unpack {args.exe}: {str(e)}", file=sys.stderr)
+            return 1
+
+        patched=False
+        unpatched=False
+        try:
+            Binary.patch(unpacked, differences, reverse=False)
+            unpatched = True
+        except Exception as e:
+            # It wasn't pristine.
+            pass
+
+        try:
+            Binary.patch(unpacked, differences, reverse=True)
+            patched = True
+        except Exception as e:
+            # It wasn't patched.
+            pass
+
+        if not patched and not unpatched:
+            print(f"{args.exe} is unknown, possibly the wrong game binary or patched with an older version of dongledumper.patch?")
+        elif patched and not unpatched:
+            print(f"{args.exe} is patched for dongle dumping!")
+
+            # Now, check the password fields and see what game it is for.
+            ids = unpacked[0x94894:0x948AC]
+            passwords = unpacked[0x948AC:0x948C4]
+
+            recognized = False
+            for game, expected in donglepasswords.items():
+                if ids != b''.join(expected['ids']):
+                    continue
+                if passwords != b''.join(expected['passwords']):
+                    continue
+
+                print(f"Passwords can be used for {game} dongles!")
+                recognized = True
+
+            if not recognized:
+                print(f"Passwords are not recognized!")
+        elif not patched and unpatched:
+            print(f"{args.exe} is unpatched. You can patch it by running `./utils/exe_utils patch {args.exe} {args.exe}.patched --patch-file {args.patch_file}`")
+        else:
+            raise Exceptin("Logic error!")
+    elif args.command == 'password':
+        try:
+            with open(args.exe, "rb") as fp:
+                data = fp.read()
+
+            unpacked = FirebeatExe.exe_to_raw(data, is_ppp=False)
+        except Exception as e:
+            print(f"Failed to unpack {args.exe}: {str(e)}", file=sys.stderr)
+            return 1
+
+        if not args.game:
+            raise Exception("Please provide a game to dump dongles for!")
+
+        ids = b''.join(donglepasswords[args.game]['ids'])
+        passwords = b''.join(donglepasswords[args.game]['passwords'])
+
+        new = unpacked[:0x94894] + ids + unpacked[0x948AC:]
+        new = new[:0x948AC] + passwords + new[0x948C4:]
+        if len(new) != len(unpacked):
+            raise Exception("Logic error, bad IDs or passwords in data!")
+
+        packed = FirebeatExe.raw_to_exe(new, is_ppp=False)
+        with open(args.exe, "wb") as fp:
+            fp.write(packed)
+
+        print(f"{args.exe} updated to dump {args.game} dongles!")
+    else:
+        print("Please specify a valid command!", file=sys.stderr)
+        return 1
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
