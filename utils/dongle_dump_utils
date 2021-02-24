@@ -174,7 +174,7 @@ def main() -> int:
         '--game',
         type=str,
         default=None,
-        choices=['C01'],
+        choices=list(x for x in donglepasswords),
         help='The game that we want to dump the dongle of.',
     )
 

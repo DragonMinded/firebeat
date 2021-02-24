@@ -7,7 +7,10 @@
 # Then, follow the instructions in the readme to replace the HIKARU.EXE in your CD image with HIKARU-PATCHED.EXE (being sure to rename
 # the file back to HIKARU.EXE inside the image) and then burn it and insert it into your BeatmaniaIII.
 #
-# Note that this is only capable of dumping a BeatmaniaIII Final dongle without additional modifications.
+# Note that this is only capable of dumping a BeatmaniaIII Final dongle without additional modifications. If the dongle was
+# successfully dumped, a green "OK" will display on the screen followed by three 48-byte hex outputs of the 3 enclaves. If
+# the dongle was for the wrong game, "ERROR E801 SECURITY ERROR" will be displayed. If no dongle is present, the message
+# "ERROR E800 NO SECURITY ERROR" will be displayed.
 #
 # File size: 1048576
 
