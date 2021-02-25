@@ -9,10 +9,10 @@ from firebeat import FirebeatExe
 
 
 donglepasswords: Dict[str, Dict[str, List[bytes]]] = {
-    # BMIII (Missing CD-ROM, can't get passwords)
+    # BMIII
     '972': {
-        'ids': [b'DEADBEEF', b'DEADBEEF', b'DEADBEEF'],
-        'passwords': [b'DEADBEEF', b'DEADBEEF', b'DEADBEEF'],
+        'ids': [b'bm3Secu1', b'bm3Secu2', b'bm3Secu3'],
+        'passwords': [b'Fragile-', b'CloseToT', b'heEdgeAn'],
     },
     # BMIII Core Remix
     'A05': {
@@ -123,7 +123,7 @@ def main() -> int:
         epilog=(
             f"Currently supports working with a modified BMIII The Final image to dump dongles on "
             f"an actual firebeat. The following games are supported:{os.linesep}"
-            # f" - 972 - BeatmaniaIII{os.linesep}": TODO: Uncomment when we get the CD for 1st and I get passwords.
+            f" - 972 - BeatmaniaIII{os.linesep}"
             f" - A05 - BeatmaniaIII Core Remix{os.linesep}"
             f" - A21 - BeatmaniaIII 6th Mix{os.linesep}"
             f" - B07 - BeatmaniaIII 7th Mix{os.linesep}"
