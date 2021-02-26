@@ -1,0 +1,50 @@
+#! /usr/bin/env python3
+import argparse
+import sys
+
+
+def crc8(data: bytes) -> int:
+    # Start with 0x00, polynomial X^8 + X^5 + X^4 + 1
+    crc = 0x0
+    poly = 0x118
+
+    for byte in data:
+        for bit in range(8):
+            if bool((crc ^ byte) & 0x01):
+                crc ^= poly
+            crc >>= 1
+            byte >>= 1
+
+    return crc & 0xFF
+
+
+def hexit(val: int) -> str:
+    strval = hex(val)[2:].upper()
+    if len(strval) < 2:
+        strval = "0" * (2 - len(strval)) + strval
+    return strval
+
+
+def main() -> int:
+    # Create the argument parser
+    parser = argparse.ArgumentParser(
+        description="Run a CRC-8 as specified by DS1991 datasheet against some bytes.",
+    )
+    parser.add_argument(
+        'bytes',
+        metavar='BYTES',
+        type=str,
+        help='The bytes we should CRC, as hexidecimal.',
+    )
+    args = parser.parse_args()
+
+    data = args.bytes
+    if bool(len(data) & 0x1):
+        raise Exception("Can't have an odd number of nibbles!")
+    bytedata = bytes([int(data[x:x+2], 16) for x in range(0, len(data), 2)])
+    print(hexit(crc8(bytedata)))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
