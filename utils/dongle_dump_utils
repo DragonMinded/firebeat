@@ -291,6 +291,8 @@ def main() -> int:
         with open(args.dongle, "rb") as fp:
             data = fp.read()
 
+        print(f"Examining {args.dongle}...")
+
         # 3 Enclaves consisting of an 8-byte ID, 8-byte password and 48 byte enclave.
         # A single ROM ID at the end of the file.
         if len(data) != (8 + (3 * (48 + 8 + 8))):
