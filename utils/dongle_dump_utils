@@ -116,6 +116,22 @@ for pw, items in donglepasswords.items():
             raise Exception(f"Bad password length for {pw}!")
 
 
+# CRC utility matching Dallas DS1991 ROM ID.
+def crc8(data: bytes) -> int:
+    # Start with 0x00, polynomial X^8 + X^5 + X^4 + 1
+    crc = 0x0
+    poly = 0x118
+
+    for byte in data:
+        for bit in range(8):
+            if bool((crc ^ byte) & 0x01):
+                crc ^= poly
+            crc >>= 1
+            byte >>= 1
+
+    return crc & 0xFF
+
+
 def main() -> int:
     # Create the argument parser
     parser = argparse.ArgumentParser(
@@ -178,6 +194,15 @@ def main() -> int:
         help='The game that we want to dump the dongle of.',
     )
 
+    # Parser for dongle validation
+    validate_parser = subparsers.add_parser('validate', help='Check a Firebeat dongle dump to see if it appears correct.')
+    validate_parser.add_argument(
+        'dongle',
+        metavar='DONGLE',
+        type=str,
+        help='The dongle binary file that we should validate.',
+    )
+
     # Grab what we're doing
     args = parser.parse_args()
 
@@ -195,19 +220,19 @@ def main() -> int:
             print(f"Failed to unpack {args.exe}: {str(e)}", file=sys.stderr)
             return 1
 
-        patched=False
-        unpatched=False
+        patched = False
+        unpatched = False
         try:
             Binary.patch(unpacked, differences, reverse=False)
             unpatched = True
-        except Exception as e:
+        except Exception:
             # It wasn't pristine.
             pass
 
         try:
             Binary.patch(unpacked, differences, reverse=True)
             patched = True
-        except Exception as e:
+        except Exception:
             # It wasn't patched.
             pass
 
@@ -231,11 +256,11 @@ def main() -> int:
                 recognized = True
 
             if not recognized:
-                print(f"Passwords are not recognized!")
+                print("Passwords are not recognized!")
         elif not patched and unpatched:
             print(f"{args.exe} is unpatched. You can patch it by running `./utils/exe_utils patch {args.exe} {args.exe}.patched --patch-file {args.patch_file}`")
         else:
-            raise Exceptin("Logic error!")
+            raise Exception("Logic error!")
     elif args.command == 'password':
         try:
             with open(args.exe, "rb") as fp:
@@ -262,6 +287,46 @@ def main() -> int:
             fp.write(packed)
 
         print(f"{args.exe} updated to dump {args.game} dongles!")
+    elif args.command == 'validate':
+        with open(args.dongle, "rb") as fp:
+            data = fp.read()
+
+        # 3 Enclaves consisting of an 8-byte ID, 8-byte password and 48 byte enclave.
+        # A single ROM ID at the end of the file.
+        if len(data) != (8 + (3 * (48 + 8 + 8))):
+            print('Dongle file is the wrong length!')
+            return 1
+
+        # Validate the last 8 bytes
+        if data[-1] != 0x02:
+            print('ROM ID product code should be 0x02!')
+            return 1
+
+        # Validate the CRC (should get 0x00)
+        if crc8(data[-8:][::-1]) != 0x00:
+            print('CRC for last 8 bytes is not correct!')
+            return 1
+
+        # Figure out IDs and passwords
+        ids = data[0:8] + data[64:72] + data[128:136]
+        passwords = data[8:16] + data[72:80] + data[136:144]
+
+        recognized = False
+        for game, expected in donglepasswords.items():
+            if ids != b''.join(expected['ids']):
+                continue
+            if passwords != b''.join(expected['passwords']):
+                continue
+
+            print(f"Dongle can be used for {game}!")
+            recognized = True
+
+        if not recognized:
+            print("The game this dongle goes to is unrecognized!")
+            return 1
+
+        print("This dongle looks good!")
+        return 0
     else:
         print("Please specify a valid command!", file=sys.stderr)
         return 1
