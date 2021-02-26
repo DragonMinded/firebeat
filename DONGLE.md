@@ -30,9 +30,11 @@ validate the rest of the digits so any valid displayable ascii string is
 technically a correct dongle. The rest of the enclave appears to be filled
 with ascii space characters.
 
-The second enclave appears to be completely ignored aside from verifying that
-the data itself can be transferred. It appears to be filled entirely with
-ascii space characters.
+The second enclave appears to be completely ignored in most games aside from
+verifying that the data itself can be transferred. It appears to be filled
+entirely with ascii space characters. For the few games that do use this
+enclave (Pop'n Music Mickey Tunes, Animelo 1 and 2) this includes additional
+license information.
 
 The third enclave is the service mode enclave and is normally all ascii
 space characters on a consumer dongle. Various games recognize various
@@ -42,6 +44,18 @@ service mode, debug mode, easy mode, and others. The game will compare the
 full enclave data against a list of known strings and enable various modes
 depending on which one matches, defaulting to a standard game mode if there
 is no match.
+
+There is an additional 8 byte ROM ID that is unique and read-only for each
+DS1991 button. This is completely unused in firebeat games. All games skip
+reading the ID and make no use of it. However, when dumping a dongle it should
+be included in the dump at the end of the file. Fortunately the ROM ID is
+laser engraved on the iButton itself. To retrieve the ROM ID, remove the iButton
+from the DB9 enclosure and flip it over. You'll notice a 2 digit hex number on
+the left, a 2 digit hex number on the right and a 12 digit hex number below
+both of them. The left number is the ROM ID CRC, the right is the product code
+(always 02) and the bottom is the unique serial number. This should be transcribed
+by first noting down the CRC, then the 12 digit serial, and finally the product
+code (02).
 
 ## Dumping Theory
 
@@ -86,12 +100,14 @@ another game, one must replace the ID and password strings with the correct ID
 and password pairs from that game itself. Aside from that, everything works as
 desired.
 
-Once you have all three enclaves output, you can reconstruct a dongle file for
-use with MAME or to rewrite a new dongle if you have the capability. For MAME,
-the dongle file should look like a raw dump of the entire iButton from the
-perspective of the iButton internals. That means the first ID (8 bytes), then
-the first password (8 bytes) and then the first enclave (48 bytes). Concatenate
-those, and do the same for the second ID, password and enclave, followed by the
-third. If you have an empty iButton you can program the three enclaves by using
-the ID and passwords followed by a copy of the data from another dongle or hand
-crafted data if you so desire.
+Once you have all three enclaves output and have noted the ROM ID from the
+iButton itself, you can reconstruct a dongle file for use with MAME or to rewrite
+a new dongle if you have the capability. For MAME, the dongle file should look
+like a raw dump of the entire iButton from the perspective of the iButton
+internals. That means the first ID (8 bytes), then the first password (8 bytes)
+and then the first enclave (48 bytes). Concatenate those, and do the same for
+the second ID, password and enclave, followed by the third. Finally, the 8
+byte ROM ID should follow all 3 enclaves. If done correctly, the resulting file
+should be exactly 200 bytes long. If you have an empty iButton you can program
+the three enclaves by using the ID and passwords followed by a copy of the data
+from another dongle or hand crafted data if you so desire.
