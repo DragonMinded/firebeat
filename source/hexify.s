@@ -11,6 +11,7 @@
     .section .text
     .globl loc_hexify
 
+loc_hexify:
     # Input location is on the stack
     addi      %r10, %r1, 0x38
 
@@ -21,7 +22,7 @@
     # Number of bytes output is zero
     li        %r12, 0
 
-loc_hexify:
+loop:
     cmpwi %r12, 0x90   # 48 byte * 3 sections
     bge loc_finished
     
@@ -44,7 +45,7 @@ loc_hexify:
     
     # We haven't output enough bytes so don't bother.
     addi %r12, %r12, 1
-    b loc_hexify
+    b loop
 
 might_need_newline:
     # See if we're on a 16 character boundary.
@@ -54,7 +55,7 @@ might_need_newline:
     cmpwi %r4, 0x1
     
     # We aren't, lets loop again.
-    bge loc_hexify
+    bge loop
     
     # We are, add a newline
     li %r4, 0x0A
@@ -62,7 +63,7 @@ might_need_newline:
     addi %r11, %r11, 1
     
     # Loop back to start.
-    b loc_hexify
+    b loop
 
 sub_hex:
     cmpwi %r4, 0xA
