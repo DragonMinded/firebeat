@@ -9,7 +9,7 @@
 # 
 # The resulting bin can be loaded into MAME like so, or patched onto a legit binary that was extracted using exe_utils:
 #
-# load hexify.bin,0x8007ec5c,0x4C
+# load register.bin,0x8007ec5c,0x4C
 
     .section .text
     .globl loc_register
