@@ -1,0 +1,5 @@
+# File size: 1048576
+# Skips the dongle check, forces the game to think the cabinet is JP region.
+4490: 48 09 00 3D -> 38 60 00 00
+44FC: 48 09 01 CD -> 38 60 00 00
+4A70: 48 08 FD DD -> 38 60 00 00

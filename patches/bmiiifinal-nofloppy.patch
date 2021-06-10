@@ -1,0 +1,5 @@
+# File size: 1048576
+# Skip initializing the floppy drive and disables the floppy drive.
+47F8: 48 0C EF 91 -> 38 60 00 00
+3FAF4: 4B FF FD 59 -> 38 60 00 00
+3FB54: 4B FF FC F9 -> 38 60 00 00
