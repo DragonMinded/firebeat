@@ -1,4 +1,5 @@
 from typing import List, Optional, Tuple, cast
+from typing_extensions import Final
 
 
 class BinaryException(Exception):
@@ -7,7 +8,7 @@ class BinaryException(Exception):
 
 class Binary:
 
-    CHUNK_SIZE = 1024
+    CHUNK_SIZE: Final[int] = 1024
 
     @staticmethod
     def _hex(val: int) -> str:

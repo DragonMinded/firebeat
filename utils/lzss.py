@@ -1,11 +1,12 @@
 from typing import Generator, List, Optional
+from typing_extensions import Final
 
 
 class LZSSDecompressor:
-    WINDOW_LENGTH = 0x1000
+    WINDOW_LENGTH: Final[int] = 0x1000
 
-    FLAG_COPY = 1
-    FLAG_BACKREF = 0
+    FLAG_COPY: Final[int] = 1
+    FLAG_BACKREF: Final[int] = 0
 
     def __init__(self, data: bytes) -> None:
         self.__decompressed: Optional[bytes] = None
@@ -94,7 +95,7 @@ class LZSSDecompressor:
 
 
 class LZSSFakeCompressor:
-    WINDOW_LENGTH = 0x1000
+    WINDOW_LENGTH: Final[int] = 0x1000
 
     def __init__(self, data: bytes) -> None:
         self.__compressed: Optional[bytes] = None

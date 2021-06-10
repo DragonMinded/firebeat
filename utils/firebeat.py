@@ -1,12 +1,14 @@
 import struct
+from typing_extensions import Final
+
 from lzss import LZSSDecompressor, LZSSFakeCompressor
 
 
 class FirebeatExe:
 
-    PPP_LOAD_OFFSET: int = 0x80000000
-    PPP_IMAGE_HEADER: bytes = b"\x21\x3a\x45\x58\x45\x3a\x30\x30"
-    PPP_IMAGE_FOOTER: bytes = b"\x21\x3a\x45\x58\x45\x3a\x30\x30"
+    PPP_LOAD_OFFSET: Final[int] = 0x80000000
+    PPP_IMAGE_HEADER: Final[bytes] = b"\x21\x3a\x45\x58\x45\x3a\x30\x30"
+    PPP_IMAGE_FOOTER: Final[bytes] = b"\x21\x3a\x45\x58\x45\x3a\x30\x30"
 
     @staticmethod
     def __simple_exe_to_raw(data: bytes) -> bytes:
