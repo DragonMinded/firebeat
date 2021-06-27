@@ -3,7 +3,7 @@ import argparse
 import os
 import sys
 
-from binary import Binary
+from arcadeutils.binary import BinaryDiff
 from firebeat import FirebeatExe
 
 
@@ -151,7 +151,7 @@ def main() -> int:
         try:
             file1 = FirebeatExe.exe_to_raw(file1, is_ppp=args.ppp)
             file2 = FirebeatExe.exe_to_raw(file2, is_ppp=args.ppp)
-            differences = Binary.diff(file1, file2)
+            differences = BinaryDiff.diff(file1, file2)
         except Exception as e:
             print(f"Could not diff {args.file1} against {args.file2}: {str(e)}", file=sys.stderr)
             return 1
@@ -175,7 +175,7 @@ def main() -> int:
 
         try:
             old = FirebeatExe.exe_to_raw(old, is_ppp=args.ppp)
-            new = Binary.patch(old, differences, reverse=args.reverse)
+            new = BinaryDiff.patch(old, differences, reverse=args.reverse)
             new = FirebeatExe.raw_to_exe(new, is_ppp=args.ppp)
         except Exception as e:
             print(f"Could not patch {args.exe}: {str(e)}", file=sys.stderr)

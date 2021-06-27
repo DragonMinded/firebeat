@@ -1,0 +1,7 @@
+# If you have used a donor board from a Pop'n Music or Beatmania III to do a
+# mainboard repair for Keyboard Mania, sometimes it can throw an E940 error
+# after passing all hardware checks. This seems to be an error verifying that
+# the software is running on the right type of Firebeat. This skips this check
+# and allows you to transplant parts between Firebeat boards to make a Keyboard
+# Mania main board.
+5A44: 41 82 -> 48 00

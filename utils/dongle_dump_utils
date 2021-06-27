@@ -4,7 +4,7 @@ import os
 import sys
 from typing import Dict, List
 
-from binary import Binary
+from arcadeutils.binary import BinaryDiff
 from firebeat import FirebeatExe
 
 
@@ -223,14 +223,14 @@ def main() -> int:
         patched = False
         unpatched = False
         try:
-            Binary.patch(unpacked, differences, reverse=False)
+            BinaryDiff.patch(unpacked, differences, reverse=False)
             unpatched = True
         except Exception:
             # It wasn't pristine.
             pass
 
         try:
-            Binary.patch(unpacked, differences, reverse=True)
+            BinaryDiff.patch(unpacked, differences, reverse=True)
             patched = True
         except Exception:
             # It wasn't patched.

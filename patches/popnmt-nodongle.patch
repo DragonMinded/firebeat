@@ -1,0 +1,7 @@
+# Skip Dongle Check on Mickey Tunes original disk.
+B924: 48 01 26 01 -> 38 60 00 00
+CD7C: 3D 60 80 10 -> 39 60 00 00
+CD80: 81 6B 02 94 -> 39 60 00 00
+DB10: 48 01 04 15 -> 38 60 00 00
+1D0FE: FF FF -> 00 00
+1E66A: FF Ff -> 00 00

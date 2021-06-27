@@ -1,0 +1,3 @@
+# Skip Dongle Check
+CCFC: 48 01 43 F9 -> 38 60 00 00
+EFD8: 48 01 21 1D -> 38 60 00 00

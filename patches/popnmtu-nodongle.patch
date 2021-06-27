@@ -1,0 +1,6 @@
+# Skip Dongle Check on Mickey Tunes Update disk
+30524: 48 01 D0 09 -> 38 60 00 00
+31E0C: 3D 60 80 15 81 6B 6A 4C -> 39 60 00 00 39 60 00 00
+32BB0: 48 01 A9 7D -> 38 60 00 00
+43A76: FF FF -> 00 00
+4DC72: FF FF -> 00 00
