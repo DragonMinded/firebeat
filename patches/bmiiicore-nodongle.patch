@@ -1,5 +1,7 @@
 # File size: 1048576
 # Skips the dongle check, and forces cabinet region checks to behave
 # as if a JP dongle (4th serial is 1 or 3) is inserted.
-7a890: 94 21 FF 30 7C 08 02 A6 -> 38 60 00 00 4E 80 00 20
-7aab0: 48 00 00 10 -> 7D 6B 5A 78
+94A0: 48 00 04 AD -> 7F 18 C2 78
+94B0: 48 00 04 9D -> 7F 18 C2 78
+7A890: 94 21 FF 30 7C 08 02 A6 -> 38 60 00 00 4E 80 00 20
+7AAB0: 48 00 00 10 -> 7D 6B 5A 78
