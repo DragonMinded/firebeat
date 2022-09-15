@@ -1,3 +1,4 @@
 # File size: 1048576
 # Skips initializing the floppy controller, disables floppy in-game.
+69BE8: 94 21 FF C0 7C 08 02 A6 93 E1 00 3C 90 01 00 48 7C 7F 1B 78 -> 3D 60 80 00 61 6B 00 05 3D 80 80 10 91 6C 55 58 4E 80 00 20
 9B1B8: 94 21 FF A0 7C 08 02 A6 -> 38 60 00 00 4E 80 00 20
